@@ -1,0 +1,68 @@
+# -----------------
+# Python / ML ignores
+# -----------------
+
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+
+# Virtual environments
+.env
+venv/
+.venv/
+env/
+ENV/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# IDEs and editors
+.vscode/
+.idea/
+
+# macOS
+.DS_Store
+
+# Logs and databases
+*.log
+*.sqlite3
+*.db
+
+# Model / artifact files
+*.pth
+*.pt
+*.ckpt
+*.h5
+*.hdf5
+*.pkl
+*.pickle
+*.joblib
+*.sav
+*.onnx
+
+# NumPy / arrays
+*.npy
+*.npz
+
+# Temporary / backup files
+*~
+*.bak
+tmp/
+temp/
+
+# Notebook outputs / large media (untracked by default)
+# Uncomment to ignore exported images or datasets in notebooks
+# *.png
+# *.jpg
+# *.jpeg
+# *.gif
+
