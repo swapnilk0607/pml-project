@@ -33,6 +33,9 @@ class ImprovedCricketModel:
         Load data with better preprocessing.
         """
         df = pd.read_csv(self.file_path)
+        #filter first 1000 rows for quick testing
+        df = df.head(1000)
+        print(f"Data loaded: {df.shape}")
         df_clean = df.dropna()
         
         #filter out rows with y=1
@@ -264,10 +267,44 @@ class ImprovedCricketModel:
         print("="*70)
         print(classification_report(y_test, y_pred))
         
-        # Confusion matrix
+        # Confusion matrix (styled visualization)
         cm = confusion_matrix(y_test, y_pred)
         print("\nConfusion Matrix:")
         print(cm)
+
+        try:
+            import seaborn as sns
+            import os
+            # Prepare nice labels
+            labels = sorted(np.unique(y_test))
+            fig, ax = plt.subplots(figsize=(8, 6))
+            sns.heatmap(
+                cm,
+                annot=True,
+                fmt="d",
+                cmap="YlGnBu",
+                linewidths=0.5,
+                linecolor="white",
+                cbar=True,
+                xticklabels=labels,
+                yticklabels=labels,
+                ax=ax
+            )
+            ax.set_title("Confusion Matrix", fontsize=14, fontweight="bold")
+            ax.set_xlabel("Predicted", fontsize=12)
+            ax.set_ylabel("Actual", fontsize=12)
+            plt.tight_layout()
+
+            # Save under models directory alongside pickles
+            models_dir = os.path.join(os.path.dirname(__file__), '..', '..', 'models')
+            models_dir = os.path.abspath(models_dir)
+            os.makedirs(models_dir, exist_ok=True)
+            out_path = os.path.join(models_dir, 'confusion_matrix.png')
+            fig.savefig(out_path, dpi=160)
+            print(f"\n✓ Confusion matrix saved to: {out_path}")
+            plt.close(fig)
+        except Exception as viz_err:
+            print(f"Could not render/save confusion matrix heatmap: {viz_err}")
         
         # Save models
         self.save_models(best_model_name)
@@ -278,21 +315,31 @@ class ImprovedCricketModel:
         """
         Save trained models and preprocessors.
         """
-        with open('../models/best_model.pkl', 'wb') as f:
+        import os
+        # Resolve a project-local models directory and ensure it exists
+        models_dir = os.path.join(os.path.dirname(__file__), '..', '..', 'models')
+        models_dir = os.path.abspath(models_dir)
+        os.makedirs(models_dir, exist_ok=True)
+
+        best_model_path = os.path.join(models_dir, 'best_model.pkl')
+        with open(best_model_path, 'wb') as f:
             pickle.dump(self.best_model, f)
-        
-        with open('../models/scaler.pkl', 'wb') as f:
+
+        scaler_path = os.path.join(models_dir, 'scaler.pkl')
+        with open(scaler_path, 'wb') as f:
             pickle.dump(self.scaler, f)
-        
+
         if self.pca:
-            with open('../models/pca_model.pkl', 'wb') as f:
+            pca_path = os.path.join(models_dir, 'pca_model.pkl')
+            with open(pca_path, 'wb') as f:
                 pickle.dump(self.pca, f)
-        
+
         if self.feature_selector:
-            with open('../models/feature_selector.pkl', 'wb') as f:
+            feature_selector_path = os.path.join(models_dir, 'feature_selector.pkl')
+            with open(feature_selector_path, 'wb') as f:
                 pickle.dump(self.feature_selector, f)
         
-        print(f"\n✓ Models saved (Best: {best_model_name})")
+        print(f"\n✓ Models saved to {models_dir} (Best: {best_model_name})")
 
 
 def run_full_pipeline(file_path: str, use_pca: bool = True, n_features: int = 250):
