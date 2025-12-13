@@ -1039,15 +1039,17 @@ def render_test_model_section():
         st.success("✅ Image selected")
         cols_io = st.columns([1, 1])
         with cols_io[0]:
-            st.markdown('<div class="preview-card">', unsafe_allow_html=True)
-            st.image(st.session_state.test_model_image, caption="Preview", width=420)
+            st.markdown("#### Input Image")
+            # st.markdown('<div class="preview-card">', unsafe_allow_html=True)
+            st.image(st.session_state.test_model_image, caption=None, width=420)
             st.markdown('</div>', unsafe_allow_html=True)
             run_clicked = st.button("🔍 Run Classification", type="primary")
             st.markdown('<span class="hint">The model will return predicted class and confidence.</span>', unsafe_allow_html=True)
         with cols_io[1]:
+            st.markdown("#### Classified Image by ML Model")
             output_placeholder = st.empty()
             if st.session_state.test_model_output_path:
-                output_placeholder.image(st.session_state.test_model_output_path, caption=os.path.basename(st.session_state.test_model_output_path), width=420)
+                output_placeholder.image(st.session_state.test_model_output_path, caption=None, width=420)
             else:
                 output_placeholder.markdown('<span class="badge">Awaiting classification</span><div class="skeleton"></div>', unsafe_allow_html=True)
 
@@ -1092,7 +1094,7 @@ def render_test_model_section():
                 # Replace the skeleton with the output image in-place
                 st.session_state.test_model_output_path = latest
                 # Update the right pane immediately
-                output_placeholder.image(latest, caption=os.path.basename(latest), width=420)
+                output_placeholder.image(latest, caption=None, width=420)
                 st.balloons()
             else:
                 st.warning("No output images found in tabs/test_model/output.")
