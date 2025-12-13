@@ -265,7 +265,38 @@ class ImprovedCricketModel:
         print("\n" + "="*70)
         print("TEST SET EVALUATION")
         print("="*70)
-        print(classification_report(y_test, y_pred))
+        # Classification report
+        report_text = classification_report(y_test, y_pred)
+        print(report_text)
+        # Pretty visualization of classification report
+        try:
+            from sklearn.metrics import classification_report as cr
+            import seaborn as sns
+            import os
+            report_dict = cr(y_test, y_pred, output_dict=True)
+            # Build DataFrame with classes only
+            cls_rows = {k: v for k, v in report_dict.items() if k not in ["accuracy", "macro avg", "weighted avg"]}
+            df_rep = pd.DataFrame(cls_rows).T[["precision", "recall", "f1-score", "support"]]
+            # Plot precision/recall/f1 bars per class
+            fig2, ax2 = plt.subplots(figsize=(10, 6))
+            df_plot = df_rep[["precision", "recall", "f1-score"]]
+            df_plot.plot(kind="bar", ax=ax2, colormap="viridis")
+            ax2.set_title("Classification Report (Precision/Recall/F1)", fontsize=14, fontweight="bold")
+            ax2.set_xlabel("Class", fontsize=12)
+            ax2.set_ylabel("Score", fontsize=12)
+            ax2.legend(loc="upper right")
+            ax2.grid(axis="y", alpha=0.2)
+            plt.tight_layout()
+            # Save next to models
+            models_dir = os.path.join(os.path.dirname(__file__), '..', '..', 'models')
+            models_dir = os.path.abspath(models_dir)
+            os.makedirs(models_dir, exist_ok=True)
+            rep_path = os.path.join(models_dir, 'classification_report.png')
+            fig2.savefig(rep_path, dpi=160)
+            print(f"\n✓ Classification report chart saved to: {rep_path}")
+            plt.close(fig2)
+        except Exception as rep_err:
+            print(f"Could not render/save classification report chart: {rep_err}")
         
         # Confusion matrix (styled visualization)
         cm = confusion_matrix(y_test, y_pred)

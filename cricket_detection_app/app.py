@@ -967,7 +967,13 @@ def render_feature_extraction_section():
         st.markdown("### Train Model")
         st.caption("Train the ML model using the extracted features CSV.")
         # Training UI: button + animated feedback
-        train_btn = st.button("🚀 Train the ML Model", type="primary")
+        # Pre-flight: verify features CSV exists
+        features_csv = "tabs/model_creation/input/enhanced_features_consolidation.csv"
+        import os
+        if not os.path.exists(features_csv):
+            st.warning("The features CSV was not found. Please run feature extraction first to generate 'enhanced_features_consolidation.csv'.")
+            st.caption("Expected path: tabs/model_creation/input/enhanced_features_consolidation.csv")
+        train_btn = st.button("🚀 Train the ML Model", type="primary", disabled=not os.path.exists(features_csv))
         if train_btn:
             try:
                 # Animated training banner
@@ -984,10 +990,37 @@ def render_feature_extraction_section():
                 with st.spinner("Training in progress… This may take a moment."):
                     # Import wrapper and run
                     from tabs.model_creation.model_creation import run_full_pipeline
-                    features_csv = "tabs/model_creation/input/enhanced_features_consolidation.csv"
                     _results = run_full_pipeline(features_csv, use_pca=True, n_features=250)
                 st.success("✅ Training completed successfully.")
                 st.balloons()
+                # Summary chips
+                try:
+                    if isinstance(_results, dict) and len(_results) > 0:
+                        best_name = max(_results, key=lambda m: _results[m].get('cv_mean', 0))
+                        best_score = _results[best_name].get('cv_mean', 0)
+                        cols_chips = st.columns(3)
+                        with cols_chips[0]:
+                            st.markdown(f"<div style='display:inline-block;padding:6px 10px;border-radius:999px;background:rgba(35,166,213,0.15);border:1px solid rgba(35,166,213,0.35);'>🏆 Best Model: <strong>{best_name}</strong></div>", unsafe_allow_html=True)
+                        with cols_chips[1]:
+                            st.markdown(f"<div style='display:inline-block;padding:6px 10px;border-radius:999px;background:rgba(46,204,113,0.15);border:1px solid rgba(46,204,113,0.35);'>📈 Mean CV F1: <strong>{best_score:.4f}</strong></div>", unsafe_allow_html=True)
+                        with cols_chips[2]:
+                            models_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), 'models'))
+                            st.markdown(f"<div style='display:inline-block;padding:6px 10px;border-radius:999px;background:rgba(241,196,15,0.15);border:1px solid rgba(241,196,15,0.35);'>💾 Saved To: <strong>{models_dir}</strong></div>", unsafe_allow_html=True)
+                except Exception:
+                    pass
+                # Display saved evaluation visuals if available
+                models_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), 'models'))
+                cm_path = os.path.join(models_dir, 'confusion_matrix.png')
+                cr_path = os.path.join(models_dir, 'classification_report.png')
+                if os.path.exists(cm_path) or os.path.exists(cr_path):
+                    st.markdown("#### Evaluation Visuals")
+                    cols = st.columns(2)
+                    if os.path.exists(cm_path):
+                        with cols[0]:
+                            st.image(cm_path, caption="Confusion Matrix", use_container_width=True)
+                    if os.path.exists(cr_path):
+                        with cols[1]:
+                            st.image(cr_path, caption="Classification Report", use_container_width=True)
             except Exception as e:
                 st.error(f"❌ Training failed: {e}")
 
