@@ -1008,39 +1008,31 @@ def render_test_model_section():
         st.session_state.test_model_output_path = None
 
     with st.container():
-        cols = st.columns([2, 1])
-        with cols[0]:
-            st.markdown("#### Upload a test image")
-            st.markdown('<div class="test-card">', unsafe_allow_html=True)
-            # Single CTA button to reveal uploader
-            reveal = st.button("📤 Upload Test Image", type="primary")
-            if reveal:
-                st.session_state.show_test_uploader = True
+        # st.markdown("#### Upload a test image")
+        # st.markdown('<div class="test-card">', unsafe_allow_html=True)
+        # Single CTA button to reveal uploader
+        reveal = st.button("📤 Upload Test Image", type="primary")
+        if reveal:
+            st.session_state.show_test_uploader = True
 
-            # Show uploader only until an image is chosen
-            if st.session_state.show_test_uploader and st.session_state.test_model_image is None:
-                test_image = st.file_uploader(
-                    "",
-                    type=["png", "jpg", "jpeg", "webp"],
-                    accept_multiple_files=False,
-                    key="test_model_uploader",
-                    label_visibility="collapsed",
-                )
-                if test_image is not None:
-                    st.session_state.test_model_image = test_image
-                    # Hide uploader after selection
-                    st.session_state.show_test_uploader = False
-            st.markdown('</div>', unsafe_allow_html=True)
-
-        with cols[1]:
-            st.markdown("#### Info")
-            st.markdown('<div class="test-side">', unsafe_allow_html=True)
-            st.markdown('<div class="chip-row">', unsafe_allow_html=True)
-            st.markdown('<div class="chip format"><span class="dot"></span>Formats: PNG · JPG · JPEG · WEBP</div>', unsafe_allow_html=True)
-            st.markdown('<div class="chip size"><span class="dot"></span>Max recommended: 2000×2000 px</div>', unsafe_allow_html=True)
-            st.markdown('<div class="chip tip"><span class="dot"></span>Tip: clear, well-lit images work best</div>', unsafe_allow_html=True)
-            st.markdown('</div>', unsafe_allow_html=True)
-            st.markdown('</div>', unsafe_allow_html=True)
+        # Place uploader strictly below the button using a placeholder
+        uploader_ph = st.empty()
+        # Show uploader only until an image is chosen
+        if st.session_state.show_test_uploader and st.session_state.test_model_image is None:
+            test_image = uploader_ph.file_uploader(
+                "",
+                type=["png", "jpg", "jpeg", "webp"],
+                accept_multiple_files=False,
+                key="test_model_uploader",
+                label_visibility="collapsed",
+            )
+            if test_image is not None:
+                st.session_state.test_model_image = test_image
+                # Hide uploader after selection
+                st.session_state.show_test_uploader = False
+        else:
+            uploader_ph.empty()
+        st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown("---")
     if st.session_state.test_model_image is not None:
