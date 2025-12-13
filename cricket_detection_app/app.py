@@ -29,7 +29,7 @@ if 'uploaded_count' not in st.session_state:
 if 'annotation_completed' not in st.session_state:
     st.session_state.annotation_completed = False
 if 'current_page' not in st.session_state:
-    st.session_state.current_page = "Annotate Training Images"
+    st.session_state.current_page = "Home"
 
 def main():
     # Custom styling for header
@@ -562,12 +562,15 @@ def main():
             unsafe_allow_html=True,
     )
 
-    # Navigation buttons (Annotate first, then Feature Extraction)
+    # Navigation buttons (Home first)
+    nav_home = st.sidebar.button("🏠 Home")
     nav_annotate = st.sidebar.button("🏷️ Annotate Training Images")
     nav_feature = st.sidebar.button("🧩 ML Model Creation")
     nav_test_model = st.sidebar.button("🧪 Test Model")
 
-    if nav_annotate:
+    if nav_home:
+        st.session_state.current_page = "Home"
+    elif nav_annotate:
         st.session_state.current_page = "Annotate Training Images"
     elif nav_feature:
         st.session_state.current_page = "Feature Extraction"
@@ -622,12 +625,110 @@ def main():
 
     page = st.session_state.current_page
 
-    if page == "Annotate Training Images":
+    if page == "Home":
+        render_home_section()
+    elif page == "Annotate Training Images":
         render_annotation_section()
     elif page == "Feature Extraction":
         render_feature_extraction_section()
     elif page == "Test Model":
         render_test_model_section()
+
+
+def render_home_section():
+    st.header("🏠 Welcome to Cricket Vision")
+    st.caption("An end-to-end toolkit for annotating cricket images, extracting features, training ML models, and testing object classification.")
+
+    # Hero with animated neon gradient and floating ball
+    st.markdown(
+        """
+        <style>
+        .hero {
+            position: relative; border-radius: 16px; padding: 18px 18px 24px 18px;
+            background: linear-gradient(135deg, rgba(10,20,40,0.95), rgba(10,20,40,0.85));
+            border: 1px solid rgba(0,255,255,0.25);
+            box-shadow: 0 0 22px rgba(0,255,255,0.18), inset 0 0 18px rgba(0,255,255,0.08);
+            overflow: hidden;
+        }
+        .hero::before {
+            content: ""; position: absolute; inset: -4px; border-radius: 18px;
+            background: conic-gradient(from 180deg at 50% 50%, rgba(0,255,255,0.0), rgba(0,255,255,0.6), rgba(255,0,255,0.45), rgba(0,255,255,0.0));
+            filter: blur(16px); opacity: 0.28; pointer-events: none; animation: rotateGlow 12s linear infinite;
+        }
+        @keyframes rotateGlow { 0%{ transform: rotate(0deg) } 100%{ transform: rotate(360deg) } }
+        .hero h2 { margin: 0 0 6px 0; color: #eaf9ff; font-weight: 800; letter-spacing: .6px; text-shadow: 0 0 8px rgba(0,255,255,0.3); }
+        .hero p { margin: 0; color: #cfe8ff; }
+        .ball { position:absolute; right: 24px; top: 18px; width: 56px; height: 56px; animation: float 3s ease-in-out infinite; filter: drop-shadow(0 6px 16px rgba(178,34,34,0.35)); }
+        @keyframes float { 0%,100%{ transform: translateY(0px)} 50%{ transform: translateY(-10px)} }
+        .cta-row { display:flex; gap:12px; flex-wrap:wrap; margin-top: 14px; }
+        .cta { display:inline-block; padding: 8px 14px; border-radius: 999px; color:#eaf9ff; border:1px solid rgba(0,255,255,0.35);
+                background: linear-gradient(135deg, rgba(0,255,255,0.18), rgba(255,0,255,0.12)); box-shadow: 0 0 14px rgba(0,255,255,0.25);
+        }
+        .feature-card { border:1px solid rgba(255,255,255,0.12); border-radius:14px; padding:12px; background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03)); transition: transform .2s ease, box-shadow .2s ease; }
+        .feature-card:hover { transform: translateY(-3px); box-shadow: 0 10px 22px rgba(0,0,0,0.35); }
+        .timeline { position:relative; margin-top: 8px; }
+        .timeline .step { display:flex; align-items:center; gap:10px; margin: 6px 0; color:#dfe8ff; }
+        .timeline .dot { width:10px; height:10px; border-radius:50%; background:#00e7ff; box-shadow:0 0 12px rgba(0,231,255,0.65); }
+        </style>
+        <div class="hero">
+          <svg class="ball" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <circle cx="12" cy="12" r="10" fill="#ff6b6b" stroke="#b22222" stroke-width="1.2"/>
+            <path d="M4 12 H20" stroke="#ffffff" stroke-width="1" opacity="0.9"/>
+            <path d="M4 14 H20" stroke="#ffffff" stroke-width="0.8" opacity="0.75"/>
+            <path d="M4 10 H20" stroke="#ffffff" stroke-width="0.8" opacity="0.6"/>
+          </svg>
+          <h2>Cricket Vision — Project Overview</h2>
+          <p>Annotate training images, build robust features, train models with evaluation visuals, and test predictions — all in one place.</p>
+          <div class="cta-row">
+            <span class="cta">✏️ Annotate</span>
+            <span class="cta">🧩 Create Model</span>
+            <span class="cta">🧪 Test Model</span>
+          </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    # Quick actions as real buttons
+    c1, c2, c3 = st.columns(3)
+    with c1:
+        if st.button("✏️ Start Annotation", type="primary"):
+            st.session_state.current_page = "Annotate Training Images"
+            st.rerun()
+    with c2:
+        if st.button("🧩 Create Model", type="primary"):
+            st.session_state.current_page = "Feature Extraction"
+            st.rerun()
+    with c3:
+        if st.button("🧪 Test Model", type="primary"):
+            st.session_state.current_page = "Test Model"
+            st.rerun()
+
+    st.markdown("---")
+
+    # Features grid
+    fc1, fc2, fc3 = st.columns(3)
+    with fc1:
+        st.markdown("<div class='feature-card'>🏷️ <strong>Annotation</strong><br/><span style='opacity:.8'>Label training images with an external tool and preview annotated assets.</span></div>", unsafe_allow_html=True)
+    with fc2:
+        st.markdown("<div class='feature-card'>🧩 <strong>Feature Extraction</strong><br/><span style='opacity:.8'>Generate HOG, LBP, color stats and shape features and consolidate to CSV.</span></div>", unsafe_allow_html=True)
+    with fc3:
+        st.markdown("<div class='feature-card'>🚀 <strong>Model Training</strong><br/><span style='opacity:.8'>Train multiple models, compare CV scores and save evaluation visuals.</span></div>", unsafe_allow_html=True)
+
+    st.markdown("<div class='feature-card' style='margin-top:12px'>🔍 <strong>Model Testing</strong><br/><span style='opacity:.8'>Upload an image, run classification with animated feedback, and view the result.</span></div>", unsafe_allow_html=True)
+
+    # Simple timeline
+    st.markdown(
+        """
+        <div class='timeline'>
+          <div class='step'><span class='dot'></span>Collect & Annotate Images</div>
+          <div class='step'><span class='dot'></span>Extract & Consolidate Features</div>
+          <div class='step'><span class='dot'></span>Train & Evaluate Models</div>
+          <div class='step'><span class='dot'></span>Test & Iterate</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 
 def render_annotation_section():
