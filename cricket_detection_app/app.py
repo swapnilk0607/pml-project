@@ -575,6 +575,51 @@ def main():
         st.session_state.current_page = "Test Model"
     
 
+    # Sidebar footer: Team card pinned to bottom with neon glow effects (always render)
+    st.sidebar.markdown(
+            """
+            <style>
+            /* Make sidebar a flex column to push footer to bottom */
+            [data-testid="stSidebar"] > div:first-child { display: flex; flex-direction: column; height: 100%; }
+            [data-testid="stSidebar"] .sidebar-footer { margin-top: auto; }
+            .team-card {
+                    border: 1px solid rgba(0, 255, 255, 0.35);
+                    background: radial-gradient(120% 120% at 0% 0%, rgba(10, 20, 40, 0.95) 20%, rgba(10, 20, 40, 0.8) 60%),
+                                            linear-gradient(180deg, rgba(0,255,255,0.08), rgba(255,0,255,0.06));
+                    border-radius: 14px; padding: 12px 12px 10px 12px; color: #eaf2ff;
+                    position: relative; overflow: hidden;
+                    box-shadow: 0 0 14px rgba(0, 255, 255, 0.25), inset 0 0 12px rgba(0, 255, 255, 0.12);
+            }
+            .team-card::before {
+                    content: ""; position: absolute; inset: -2px; border-radius: 16px;
+                    background: conic-gradient(from 180deg at 50% 50%, rgba(0,255,255,0.0), rgba(0,255,255,0.6), rgba(255,0,255,0.5), rgba(0,255,255,0.0));
+                    filter: blur(14px); opacity: 0.35; pointer-events: none;
+                    animation: rotateGlow 10s linear infinite;
+            }
+            @keyframes rotateGlow { 0%{ transform: rotate(0deg) } 100%{ transform: rotate(360deg) } }
+            .team-title { font-weight: 800; font-size: 1.02rem; letter-spacing: .6px; margin-bottom: 6px; display:flex; align-items:center; gap:10px; text-shadow: 0 0 6px rgba(0,255,255,0.35); }
+            .team-title .emblem { width: 18px; height: 18px; border-radius: 50%; background: radial-gradient(circle, #00e7ff 0%, #ff00ff 70%); box-shadow: 0 0 10px rgba(0,255,255,0.65), 0 0 18px rgba(255,0,255,0.35); }
+            .team-list { list-style: none; padding: 0; margin: 6px 0 0 0; display: grid; gap: 6px; }
+            .team-list li { display:flex; align-items:center; gap:10px; font-size: .93rem; color: #e6f9ff; text-shadow: 0 0 6px rgba(0,255,255,0.25); }
+            .pulse-dot { width: 8px; height: 8px; border-radius: 50%; background: #00e7ff; box-shadow: 0 0 8px rgba(0,231,255,0.9), 0 0 16px rgba(0,231,255,0.45); animation: pulse 1.8s ease-out infinite; }
+            @keyframes pulse { 0%{transform: scale(0.9); box-shadow: 0 0 8px rgba(0,231,255,0.9), 0 0 0 0 rgba(0,231,255,0.0)} 60%{transform: scale(1); box-shadow: 0 0 14px rgba(0,231,255,0.95), 0 0 14px rgba(0,231,255,0.32)} 100%{transform: scale(0.9); box-shadow: 0 0 8px rgba(0,231,255,0.9), 0 0 0 0 rgba(0,231,255,0.0)} }
+            .team-card:hover { box-shadow: 0 0 18px rgba(0,255,255,0.45), inset 0 0 16px rgba(0,255,255,0.18); }
+            </style>
+            <div class="sidebar-footer">
+                <div class="team-card">
+                    <div class="team-title"><span class="emblem"></span>Group -3 </div>
+                    <ul class="team-list">
+                        <li><span class="pulse-dot"></span> Abhishek Jaiswal</li>
+                        <li><span class="pulse-dot"></span> Siddhesh Shirke</li>
+                        <li><span class="pulse-dot"></span> Sushant Kambli</li>
+                        <li><span class="pulse-dot"></span> Swapnil Katale</li>
+                    </ul>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+    )
+
     page = st.session_state.current_page
 
     if page == "Annotate Training Images":
@@ -965,6 +1010,26 @@ def render_test_model_section():
             border: 1px solid rgba(255,255,255,0.10);
             min-height: 280px; position: relative;
         }
+        /* Loader + overlay styles */
+        .overlay {
+            position: relative;
+            border-radius: 12px;
+            border: 1px dashed rgba(35,166,213,0.35);
+            background: radial-gradient(circle at 30% 20%, rgba(35,166,213,0.10), rgba(102,126,234,0.08));
+            padding: 16px; text-align: center; color: #eaf2ff;
+        }
+        .loader { width: 54px; height: 54px; border: 4px solid rgba(255,255,255,0.16); border-top-color: #23a6d5; border-radius: 50%; margin: 12px auto; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .scanline { position: relative; height: 6px; border-radius: 999px; overflow: hidden; background: rgba(255,255,255,0.10); margin: 12px 0; }
+        .scanline::after {
+            content: ""; position: absolute; left: -40%; top: 0; height: 100%; width: 40%;
+            background: linear-gradient(90deg, rgba(35,166,213,0.0), rgba(35,166,213,0.6), rgba(35,166,213,0.0));
+            animation: sweep 1.8s ease-in-out infinite;
+        }
+        @keyframes sweep { 0%{ left:-40% } 50%{ left:80% } 100%{ left:-40% } }
+        .success-banner { border: 1px solid rgba(46, 204, 113, 0.35); background: linear-gradient(180deg, rgba(46, 204, 113, 0.18), rgba(46, 204, 113, 0.08)); padding: 12px; border-radius: 12px; color: #eaf2ff; }
+        .success-check { display:inline-block; width: 18px; height: 18px; border-radius: 50%; background: #2ecc71; box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.6); animation: pop 1.2s ease-out forwards; margin-right:8px; vertical-align: -3px; }
+        @keyframes pop { 0%{ transform: scale(0.3); box-shadow: 0 0 0 0 rgba(46,204,113,0.6) } 50%{ transform: scale(1.05); box-shadow: 0 0 0 12px rgba(46,204,113,0.0) } 100%{ transform: scale(1); box-shadow: 0 0 0 0 rgba(46,204,113,0.0) } }
         @keyframes shimmer {
             0% { background-position: -1000px 0; }
             100% { background-position: 1000px 0; }
@@ -1051,17 +1116,16 @@ def render_test_model_section():
 
         if run_clicked:
             import time, os
-            # Inline progress inside the output area
-            st.markdown(
-                """
-                <style>
-                @keyframes classifyPulse { 0%{box-shadow:0 0 0 rgba(35,166,213,0.0)} 50%{box-shadow:0 0 22px rgba(35,166,213,0.35)} 100%{box-shadow:0 0 0 rgba(35,166,213,0.0)} }
-                .classify-card { border:1px solid rgba(255,255,255,0.12); border-radius:14px; padding:12px; background:linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03)); animation: classifyPulse 2.6s ease-in-out infinite; }
-                </style>
-                <div class=\"classify-card\">🔎 Running classification… Please wait.</div>
-                """,
-                unsafe_allow_html=True,
-            )
+            # Animated overlay inside the output area
+            loader_html = """
+            <div class='overlay'>
+              <div class='loader'></div>
+              <div>🔎 Running classification…</div>
+              <div class='scanline'></div>
+            </div>
+            """
+            output_placeholder.markdown(loader_html, unsafe_allow_html=True)
+
             progress = st.progress(0)
             status = st.empty()
             steps = [
@@ -1086,10 +1150,10 @@ def render_test_model_section():
             ]
             if files:
                 latest = max(files, key=os.path.getmtime)
-                st.success("✅ Classification complete")
                 # Replace the skeleton with the output image in-place
                 st.session_state.test_model_output_path = latest
-                # Update the right pane immediately
+                # Success banner + image
+                st.markdown("<div class='success-banner'><span class='success-check'></span>Classification complete</div>", unsafe_allow_html=True)
                 output_placeholder.image(latest, caption=None, width=420)
                 st.balloons()
             else:
