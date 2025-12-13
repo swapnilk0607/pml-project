@@ -565,6 +565,7 @@ def main():
     # Navigation buttons (Annotate first, then Feature Extraction)
     nav_annotate = st.sidebar.button("🏷️ Annotate Training Images")
     nav_feature = st.sidebar.button("🧩 ML Model Creation")
+    nav_test_model = st.sidebar.button("🧪 Test Model")
     nav_upload = st.sidebar.button("📥 Upload & Detect")
     nav_analytics = st.sidebar.button("📊 Graphical Analytics")
 
@@ -572,6 +573,8 @@ def main():
         st.session_state.current_page = "Annotate Training Images"
     elif nav_feature:
         st.session_state.current_page = "Feature Extraction"
+    elif nav_test_model:
+        st.session_state.current_page = "Test Model"
     elif nav_upload:
         st.session_state.current_page = "Upload & Detect"
     elif nav_analytics:
@@ -587,6 +590,8 @@ def main():
         render_annotation_section()
     elif page == "Feature Extraction":
         render_feature_extraction_section()
+    elif page == "Test Model":
+        render_test_model_section()
 
 def render_upload_section():
     st.header("1. Upload Images")
@@ -1023,6 +1028,9 @@ def render_feature_extraction_section():
                             st.image(cr_path, caption="Classification Report", use_container_width=True)
             except Exception as e:
                 st.error(f"❌ Training failed: {e}")
+
+def render_test_model_section():
+    st.header("🧪 Test Model")
 
 def render_analytics_section():
     st.header("📊 Model Performance Analytics")
