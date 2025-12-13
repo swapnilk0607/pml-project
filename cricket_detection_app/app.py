@@ -566,7 +566,6 @@ def main():
     nav_annotate = st.sidebar.button("🏷️ Annotate Training Images")
     nav_feature = st.sidebar.button("🧩 ML Model Creation")
     nav_test_model = st.sidebar.button("🧪 Test Model")
-    nav_upload = st.sidebar.button("📥 Upload & Detect")
     nav_analytics = st.sidebar.button("📊 Graphical Analytics")
 
     if nav_annotate:
@@ -575,16 +574,12 @@ def main():
         st.session_state.current_page = "Feature Extraction"
     elif nav_test_model:
         st.session_state.current_page = "Test Model"
-    elif nav_upload:
-        st.session_state.current_page = "Upload & Detect"
     elif nav_analytics:
         st.session_state.current_page = "Graphical Analytics"
 
     page = st.session_state.current_page
 
-    if page == "Upload & Detect":
-        render_upload_section()
-    elif page == "Graphical Analytics":
+    if page == "Graphical Analytics":
         render_analytics_section()
     elif page == "Annotate Training Images":
         render_annotation_section()
@@ -593,95 +588,6 @@ def main():
     elif page == "Test Model":
         render_test_model_section()
 
-def render_upload_section():
-    st.header("1. Upload Images")
-    st.markdown("Upload one or more cricket images. They will be saved to the directory and processed by the detection model.")
-    
-    # Display current uploaded count
-    existing_images = len([f for f in os.listdir(INPUT_DIR) if f.lower().endswith(('.png', '.jpg', '.jpeg'))])
-    st.info(f"📁 Current images in directory: **{existing_images}**")
-    
-    col1, col2 = st.columns([3, 1])
-    
-    with col1:
-        # File Uploader
-        uploaded_files = st.file_uploader(
-            "Choose cricket images to upload", 
-            type=['png', 'jpg', 'jpeg'], 
-            accept_multiple_files=True,
-            key="image_uploader"
-        )
-    
-    with col2:
-        # Clear directory button
-        if st.button("🗑️ Clear All", type="secondary"):
-            if os.path.exists(INPUT_DIR):
-                import shutil
-                shutil.rmtree(INPUT_DIR)
-                os.makedirs(INPUT_DIR)
-            st.session_state.results = None
-            st.success("Directory cleared!")
-            st.rerun()
-
-    # Process Button
-    if uploaded_files:
-        st.success(f"✅ {len(uploaded_files)} image(s) selected for upload.")
-        
-        col_run, col_info = st.columns([1, 3])
-        
-        with col_run:
-            run_detection = st.button("🚀 Save & Run Model", type="primary")
-        
-        with col_info:
-            st.write("Images will be added to the directory and processed immediately.")
-        
-        if run_detection:
-            try:
-                with st.spinner("📤 Uploading images and running detection pipeline..."):
-                    # Save files to directory (appends to existing)
-                    save_uploaded_files(uploaded_files, INPUT_DIR, append=True)
-                    st.session_state.uploaded_count += len(uploaded_files)
-                    
-                    # Invoke the model
-                    results = run_detection_pipeline(INPUT_DIR)
-                    st.session_state.results = results
-                    
-                st.success("✅ Detection Complete!")
-                st.balloons()
-            except Exception as e:
-                st.error(f"❌ Error during processing: {str(e)}")
-    
-    # Display Results
-    if st.session_state.results:
-        st.markdown("---")
-        st.header("2. Detection Results")
-        st.markdown(f"Displaying results for **{len(st.session_state.results)}** processed image(s)")
-        
-        # Create tabs for different views
-        tab1, tab2 = st.tabs(["Image Gallery", "Detailed Results"])
-        
-        with tab1:
-            # Create a grid layout for images
-            cols = st.columns(3)
-            for idx, res in enumerate(st.session_state.results):
-                col = cols[idx % 3]
-                img_path = os.path.join(INPUT_DIR, res['filename'])
-                
-                # Draw boxes using the results
-                annotated_img = draw_bounding_boxes(img_path, res['detections'])
-                
-                with col:
-                    if annotated_img:
-                        st.image(annotated_img, caption=res['filename'], use_container_width=True)
-                        st.caption(f"🕐 Processed: {res.get('processed_at', 'N/A')}")
-                    else:
-                        st.warning(f"Could not process {res['filename']}")
-        
-        with tab2:
-            st.subheader("Detection Details")
-            for res in st.session_state.results:
-                with st.expander(f"📄 {res['filename']} - {len(res['detections'])} objects detected"):
-                    st.json(res['detections'])
 
 def render_annotation_section():
     # st.header("🏷️ Annotate Training Images")
@@ -1031,6 +937,173 @@ def render_feature_extraction_section():
 
 def render_test_model_section():
     st.header("🧪 Test Model")
+    st.caption("Upload a single image to run object classification.")
+
+    # Page styling for an attractive test area
+    st.markdown(
+        """
+        <style>
+        .test-card { 
+            border: 1px solid rgba(255,255,255,0.12); 
+            border-radius: 16px; 
+            padding: 18px; 
+            background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+            box-shadow: 0 10px 26px rgba(0,0,0,0.25);
+            animation: fadeIn 0.6s ease-out;
+        }
+        .test-side { 
+            border-radius: 12px; 
+            padding: 12px; 
+            background: linear-gradient(135deg, rgba(35,166,213,0.18), rgba(102,126,234,0.16));
+            border: 1px solid rgba(35,166,213,0.28);
+            color: #eaf2ff;
+        }
+        .preview-card {
+            border-radius: 14px; padding: 10px; 
+            background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+            border: 1px solid rgba(255,255,255,0.10);
+        }
+        .output-card {
+            border-radius: 14px; padding: 12px;
+            background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+            border: 1px solid rgba(255,255,255,0.10);
+            min-height: 280px; position: relative;
+        }
+        @keyframes shimmer {
+            0% { background-position: -1000px 0; }
+            100% { background-position: 1000px 0; }
+        }
+        .skeleton {
+            height: 220px; border-radius: 12px;
+            background: linear-gradient(90deg, rgba(255,255,255,0.06) 25%, rgba(255,255,255,0.10) 50%, rgba(255,255,255,0.06) 75%);
+            background-size: 1000px 100%; animation: shimmer 1.8s linear infinite;
+        }
+        .badge {
+            display:inline-block; padding:6px 10px; border-radius:999px;
+            background: rgba(35,166,213,0.15); border:1px solid rgba(35,166,213,0.35);
+            font-size: 0.85rem; color:#dfe8ff;
+        }
+        .hint { color: #dfe8ff; opacity: 0.85; }
+        .chip-row { display:flex; gap:10px; flex-wrap:wrap; margin: 6px 0 12px; }
+        .chip { border-radius: 999px; padding: 6px 12px; font-size: 0.85rem; 
+                border: 1px solid rgba(255,255,255,0.12); 
+                background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+                color: #dfe8ff; }
+        .chip .dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:8px; }
+        .chip.format .dot { background:#23a6d5; }
+        .chip.size .dot { background:#667eea; }
+        .chip.tip .dot { background:#2ecc71; }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    # Session state flags
+    if 'show_test_uploader' not in st.session_state:
+        st.session_state.show_test_uploader = False
+    if 'test_model_image' not in st.session_state:
+        st.session_state.test_model_image = None
+    # Persist last output image to avoid duplicate layouts on rerun
+    if 'test_model_output_path' not in st.session_state:
+        st.session_state.test_model_output_path = None
+
+    with st.container():
+        cols = st.columns([2, 1])
+        with cols[0]:
+            st.markdown("#### Upload a test image")
+            st.markdown('<div class="test-card">', unsafe_allow_html=True)
+            # Single CTA button to reveal uploader
+            reveal = st.button("📤 Upload Test Image", type="primary")
+            if reveal:
+                st.session_state.show_test_uploader = True
+
+            # Show uploader only until an image is chosen
+            if st.session_state.show_test_uploader and st.session_state.test_model_image is None:
+                test_image = st.file_uploader(
+                    "",
+                    type=["png", "jpg", "jpeg", "webp"],
+                    accept_multiple_files=False,
+                    key="test_model_uploader",
+                    label_visibility="collapsed",
+                )
+                if test_image is not None:
+                    st.session_state.test_model_image = test_image
+                    # Hide uploader after selection
+                    st.session_state.show_test_uploader = False
+            st.markdown('</div>', unsafe_allow_html=True)
+
+        with cols[1]:
+            st.markdown("#### Info")
+            st.markdown('<div class="test-side">', unsafe_allow_html=True)
+            st.markdown('<div class="chip-row">', unsafe_allow_html=True)
+            st.markdown('<div class="chip format"><span class="dot"></span>Formats: PNG · JPG · JPEG · WEBP</div>', unsafe_allow_html=True)
+            st.markdown('<div class="chip size"><span class="dot"></span>Max recommended: 2000×2000 px</div>', unsafe_allow_html=True)
+            st.markdown('<div class="chip tip"><span class="dot"></span>Tip: clear, well-lit images work best</div>', unsafe_allow_html=True)
+            st.markdown('</div>', unsafe_allow_html=True)
+            st.markdown('</div>', unsafe_allow_html=True)
+
+    st.markdown("---")
+    if st.session_state.test_model_image is not None:
+        st.success("✅ Image selected")
+        cols_io = st.columns([1, 1])
+        with cols_io[0]:
+            st.markdown('<div class="preview-card">', unsafe_allow_html=True)
+            st.image(st.session_state.test_model_image, caption="Preview", width=420)
+            st.markdown('</div>', unsafe_allow_html=True)
+            run_clicked = st.button("🔍 Run Classification", type="primary")
+            st.markdown('<span class="hint">The model will return predicted class and confidence.</span>', unsafe_allow_html=True)
+        with cols_io[1]:
+            output_placeholder = st.empty()
+            if st.session_state.test_model_output_path:
+                output_placeholder.image(st.session_state.test_model_output_path, caption=os.path.basename(st.session_state.test_model_output_path), width=420)
+            else:
+                output_placeholder.markdown('<span class="badge">Awaiting classification</span><div class="skeleton"></div>', unsafe_allow_html=True)
+
+        if run_clicked:
+            import time, os
+            # Inline progress inside the output area
+            st.markdown(
+                """
+                <style>
+                @keyframes classifyPulse { 0%{box-shadow:0 0 0 rgba(35,166,213,0.0)} 50%{box-shadow:0 0 22px rgba(35,166,213,0.35)} 100%{box-shadow:0 0 0 rgba(35,166,213,0.0)} }
+                .classify-card { border:1px solid rgba(255,255,255,0.12); border-radius:14px; padding:12px; background:linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03)); animation: classifyPulse 2.6s ease-in-out infinite; }
+                </style>
+                <div class=\"classify-card\">🔎 Running classification… Please wait.</div>
+                """,
+                unsafe_allow_html=True,
+            )
+            progress = st.progress(0)
+            status = st.empty()
+            steps = [
+                ("Loading model", 20),
+                ("Preprocessing image", 40),
+                ("Inference", 80),
+                ("Postprocessing", 95),
+                ("Preparing output", 100),
+            ]
+            for label, pct in steps:
+                status.info(f"{label}…")
+                progress.progress(pct)
+                time.sleep(0.6)
+
+            output_dir = "tabs/test_model/output"
+            os.makedirs(output_dir, exist_ok=True)
+            valid_exts = (".png", ".jpg", ".jpeg", ".webp")
+            files = [
+                os.path.join(output_dir, f)
+                for f in os.listdir(output_dir)
+                if f.lower().endswith(valid_exts)
+            ]
+            if files:
+                latest = max(files, key=os.path.getmtime)
+                st.success("✅ Classification complete")
+                # Replace the skeleton with the output image in-place
+                st.session_state.test_model_output_path = latest
+                # Update the right pane immediately
+                output_placeholder.image(latest, caption=os.path.basename(latest), width=420)
+                st.balloons()
+            else:
+                st.warning("No output images found in tabs/test_model/output.")
 
 def render_analytics_section():
     st.header("📊 Model Performance Analytics")
