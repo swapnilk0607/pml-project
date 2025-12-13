@@ -566,7 +566,6 @@ def main():
     nav_annotate = st.sidebar.button("🏷️ Annotate Training Images")
     nav_feature = st.sidebar.button("🧩 ML Model Creation")
     nav_test_model = st.sidebar.button("🧪 Test Model")
-    nav_analytics = st.sidebar.button("📊 Graphical Analytics")
 
     if nav_annotate:
         st.session_state.current_page = "Annotate Training Images"
@@ -574,14 +573,11 @@ def main():
         st.session_state.current_page = "Feature Extraction"
     elif nav_test_model:
         st.session_state.current_page = "Test Model"
-    elif nav_analytics:
-        st.session_state.current_page = "Graphical Analytics"
+    
 
     page = st.session_state.current_page
 
-    if page == "Graphical Analytics":
-        render_analytics_section()
-    elif page == "Annotate Training Images":
+    if page == "Annotate Training Images":
         render_annotation_section()
     elif page == "Feature Extraction":
         render_feature_extraction_section()
@@ -1099,133 +1095,6 @@ def render_test_model_section():
             else:
                 st.warning("No output images found in tabs/test_model/output.")
 
-def render_analytics_section():
-    st.header("📊 Model Performance Analytics")
-    
-    if not st.session_state.results:
-        st.warning("❌ No data available. Please upload and process images in the 'Upload & Detect' tab first.")
-        st.info("Steps: 1) Go to 'Upload & Detect' tab → 2) Upload images → 3) Click 'Save & Run Model' → 4) Return here")
-        return
-
-    results = st.session_state.results
-    
-    try:
-        # --- Data Preparation for Graphs ---
-        all_detections = []
-        for r in results:
-            all_detections.extend(r['detections'])
-        
-        if not all_detections:
-            st.warning("No detections found in the processed images.")
-            return
-        
-        df = pd.DataFrame(all_detections)
-
-        # Key Metrics Row
-        col1, col2, col3, col4 = st.columns(4)
-        col1.metric("📷 Images Processed", len(results))
-        col2.metric("🎯 Total Objects Detected", len(df))
-        col3.metric("⭐ Avg Confidence", f"{df['confidence'].mean():.1%}")
-        col4.metric("🔝 Max Confidence", f"{df['confidence'].max():.1%}")
-
-        st.markdown("---")
-
-        # --- Graphical Representations ---
-        
-        # Create tabs for different analytics views
-        tab1, tab2, tab3, tab4 = st.tabs(["📊 Distribution", "📈 Confidence Analysis", "🎯 Class Breakdown", "📋 Data Table"])
-        
-        with tab1:
-            st.subheader("Object Class Distribution")
-            class_counts = df['class'].value_counts()
-            
-            col_bar, col_pie = st.columns(2)
-            
-            with col_bar:
-                st.bar_chart(class_counts)
-            
-            with col_pie:
-                fig, ax = plt.subplots(figsize=(8, 6))
-                colors = plt.cm.Set3(np.linspace(0, 1, len(class_counts)))
-                ax.pie(class_counts.values, labels=class_counts.index, autopct='%1.1f%%', colors=colors, startangle=90)
-                ax.set_title("Class Distribution")
-                st.pyplot(fig)
-
-        with tab2:
-            st.subheader("Confidence Score Analysis")
-            
-            col_hist, col_stats = st.columns([2, 1])
-            
-            with col_hist:
-                # Histogram
-                fig, ax = plt.subplots(figsize=(10, 5))
-                ax.hist(df['confidence'], bins=15, color='#1f77b4', edgecolor='black', alpha=0.7)
-                ax.axvline(df['confidence'].mean(), color='red', linestyle='--', linewidth=2, label=f"Mean: {df['confidence'].mean():.2f}")
-                ax.axvline(df['confidence'].median(), color='green', linestyle='--', linewidth=2, label=f"Median: {df['confidence'].median():.2f}")
-                ax.set_xlabel("Confidence Score", fontsize=11)
-                ax.set_ylabel("Frequency", fontsize=11)
-                ax.set_title("Confidence Score Distribution")
-                ax.legend()
-                st.pyplot(fig)
-            
-            with col_stats:
-                st.markdown("### Statistics")
-                st.write(f"**Mean:** {df['confidence'].mean():.3f}")
-                st.write(f"**Median:** {df['confidence'].median():.3f}")
-                st.write(f"**Std Dev:** {df['confidence'].std():.3f}")
-                st.write(f"**Min:** {df['confidence'].min():.3f}")
-                st.write(f"**Max:** {df['confidence'].max():.3f}")
-
-        with tab3:
-            st.subheader("Detailed Class Analysis")
-            
-            # Class-wise statistics
-            class_stats = df.groupby('class')['confidence'].agg(['count', 'mean', 'min', 'max', 'std'])
-            class_stats.columns = ['Count', 'Avg Confidence', 'Min', 'Max', 'Std Dev']
-            st.dataframe(class_stats, use_container_width=True)
-            
-            st.markdown("")
-            col_box, col_scatter = st.columns(2)
-            
-            with col_box:
-                # Box plot by class
-                fig, ax = plt.subplots(figsize=(10, 5))
-                df.boxplot(column='confidence', by='class', ax=ax)
-                ax.set_title("Confidence Distribution by Class")
-                ax.set_xlabel("Class")
-                ax.set_ylabel("Confidence Score")
-                plt.suptitle('')  # Remove the automatic title
-                st.pyplot(fig)
-            
-            with col_scatter:
-                # Scatter plot
-                fig, ax = plt.subplots(figsize=(10, 5))
-                for class_name in df['class'].unique():
-                    class_data = df[df['class'] == class_name]
-                    ax.scatter(range(len(class_data)), class_data['confidence'], label=class_name, s=50, alpha=0.6)
-                ax.set_xlabel("Detection Index")
-                ax.set_ylabel("Confidence Score")
-                ax.set_title("Confidence Scores by Detection")
-                ax.legend()
-                ax.grid(alpha=0.3)
-                st.pyplot(fig)
-
-        with tab4:
-            st.subheader("Raw Detection Data")
-            st.dataframe(df, use_container_width=True)
-            
-            # Download option
-            csv = df.to_csv(index=False)
-            st.download_button(
-                label="📥 Download Results as CSV",
-                data=csv,
-                file_name="detection_results.csv",
-                mime="text/csv"
-            )
-    
-    except Exception as e:
-        st.error(f"❌ Error generating analytics: {str(e)}")
-        st.info("This might occur if the detection data format is unexpected. Check your model output.")
 
 if __name__ == "__main__":
     main()
